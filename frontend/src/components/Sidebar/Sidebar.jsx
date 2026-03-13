@@ -1,8 +1,9 @@
 import React from 'react';
-import { Settings, Palette, Layers, Save } from 'lucide-react';
+import { Settings, Palette, Layers, Save, Inbox } from 'lucide-react';
 import GeneralSettings from './GeneralSettings';
 import GlobalStyling from './GlobalStyling';
 import PageManagement from './PageManagement';
+import InquiryList from './InquiryList';
 import { useContext } from 'react';
 import { ConfigContext } from '../../context/ConfigContext';
 
@@ -13,6 +14,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'settings', icon: Settings, label: 'General' },
     { id: 'styling', icon: Palette, label: 'Styling' },
     { id: 'pages', icon: Layers, label: 'Pages' },
+    { id: 'inbox', icon: Inbox, label: 'Inquiries' },
   ];
 
   return (
@@ -34,13 +36,13 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-tighter transition-all ${
               activeTab === tab.id 
                 ? 'bg-primary text-white shadow-lg shadow-primary/20' 
                 : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
             }`}
           >
-            <tab.icon size={14} />
+            <tab.icon size={12} />
             {tab.label}
           </button>
         ))}
@@ -50,6 +52,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         {activeTab === 'settings' && <GeneralSettings />}
         {activeTab === 'styling' && <GlobalStyling />}
         {activeTab === 'pages' && <PageManagement />}
+        {activeTab === 'inbox' && <InquiryList />}
       </div>
     </div>
   );
