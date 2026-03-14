@@ -6,16 +6,18 @@ const SectionRenderer = ({ section, styles }) => {
   const { heading, description, media, ctas = [], type, visibility = {}, contactForm } = section;
   const isHero = type === 'hero';
   
-  // Media configuration
-  const mediaPos = media?.position || 'left';
-  const mediaType = media?.mediaType || 'image';
-  const isHorizontal = mediaPos === 'left' || mediaPos === 'right';
-  const isReverse = mediaPos === 'right' || mediaPos === 'bottom';
-
   // Sub-element visibility
+  const badgeCurrentText = section.badgeText || (isHero ? 'Welcome' : 'Digital Experience');
+  const showBadge = visibility.badgeText !== false;
   const showHeading = visibility.heading !== false && heading;
   const showDescription = visibility.description !== false && description;
   const showMedia = visibility.media !== false && media?.url;
+
+  // Media configuration
+  const mediaPos = media?.position || 'left';
+  const mediaType = media?.mediaType || 'image';
+  const isHorizontal = showMedia ? (mediaPos === 'left' || mediaPos === 'right') : false;
+  const isReverse = showMedia ? (mediaPos === 'right' || mediaPos === 'bottom') : false;
 
   const renderMedia = () => {
     if (mediaType === 'video') {
@@ -41,15 +43,17 @@ const SectionRenderer = ({ section, styles }) => {
       <div className={`flex gap-12 ${isHorizontal ? 'flex-col md:flex-row' : 'flex-col'} ${isReverse ? (isHorizontal ? 'md:flex-row-reverse' : 'flex-col-reverse') : ''} items-center`}>
         
         {/* Content Side */}
-        <div className={`flex-1 space-y-6 ${!isHorizontal ? 'text-center max-w-4xl mx-auto' : ''}`}>
+        <div className={`flex-1 space-y-6 ${!showMedia ? 'w-full text-center max-w-4xl mx-auto' : (!isHorizontal ? 'text-center max-w-4xl mx-auto' : '')}`}>
           {showHeading && (
             <>
-                <div 
-                    className="inline-block px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-2"
-                    style={{ backgroundColor: `${styles.primaryColor}15`, color: styles.primaryColor }}
-                >
-                    {isHero ? 'Welcome' : 'Digital Experience'}
-                </div>
+                {showBadge && (
+                    <div 
+                        className="inline-block px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider mb-2"
+                        style={{ backgroundColor: `${styles.primaryColor}15`, color: styles.primaryColor }}
+                    >
+                        {badgeCurrentText}
+                    </div>
+                )}
                 <h2 className={`${isHero ? 'text-5xl md:text-7xl' : 'text-4xl md:text-5xl'} font-black text-gray-900 leading-[1.1] tracking-tight`}>
                     {heading}
                 </h2>
@@ -57,7 +61,7 @@ const SectionRenderer = ({ section, styles }) => {
           )}
 
           {showDescription && (
-            <p className={`text-lg text-gray-500 leading-relaxed max-w-lg ${!isHorizontal ? 'mx-auto' : 'mx-0'}`}>
+            <p className={`text-lg text-gray-500 leading-relaxed w-full ${(!showMedia || !isHorizontal) ? 'mx-auto' : 'mx-0'}`}>
                 {description}
             </p>
           )}
@@ -87,7 +91,7 @@ const SectionRenderer = ({ section, styles }) => {
           )}
           
           {/* CTA Buttons */}
-          <div className={`pt-4 flex flex-wrap gap-4 ${!isHorizontal ? 'justify-center' : ''}`}>
+          <div className={`pt-4 flex flex-wrap gap-4 ${(!showMedia || !isHorizontal) ? 'justify-center' : ''}`}>
             {ctas.map((cta, idx) => (
                 <button 
                     key={idx}

@@ -4,8 +4,9 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, ChevronDown, ChevronUp, 
   Settings, Eye, EyeOff, Move, Image as ImageIcon, 
   Type, AlignLeft, Layout, Globe, Search, MousePointer2, 
-  Video, CheckSquare
+  Video, CheckSquare, Upload
 } from 'lucide-react';
+import axios from 'axios';
 
 // DND Kit Imports
 import {
@@ -34,6 +35,30 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
         transition,
         isDragging
     } = useSortable({ id: section.id });
+
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            setIsUploading(true);
+            const res = await axios.post('http://127.0.0.1:5000/api/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const fullUrl = `http://127.0.0.1:5000${res.data.url}`;
+            onUpdate({ media: { ...section.media, url: fullUrl } });
+        } catch (err) {
+            console.error('Error uploading image', err);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -116,9 +141,28 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
                     <div className="space-y-4">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
+                                <label className="text-[10px] text-gray-500 uppercase font-bold">Badge Text</label>
+                                <button onClick={() => toggleSubVisibility('badgeText')} className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors ${section.visibility?.badgeText === false ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}>
+                                    {section.visibility?.badgeText === false ? <><EyeOff size={10} /> Hidden</> : <><Eye size={10} /> Visible</>}
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <Type className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={12} />
+                                <input 
+                                    type="text" 
+                                    value={section.badgeText || ''}
+                                    onChange={(e) => onUpdate({ badgeText: e.target.value })}
+                                    className="w-full bg-[#1a1a1a] border border-[#222222] rounded-lg py-2 pl-9 pr-4 text-xs focus:border-primary outline-none"
+                                    placeholder={section.type === 'hero' ? 'Welcome' : 'Digital Experience'}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
                                 <label className="text-[10px] text-gray-500 uppercase font-bold">Main Heading</label>
-                                <button onClick={() => toggleSubVisibility('heading')} className="text-[10px] text-primary">
-                                    {section.visibility?.heading === false ? 'Hidden' : 'Visible'}
+                                <button onClick={() => toggleSubVisibility('heading')} className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors ${section.visibility?.heading === false ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}>
+                                    {section.visibility?.heading === false ? <><EyeOff size={10} /> Hidden</> : <><Eye size={10} /> Visible</>}
                                 </button>
                             </div>
                             <div className="relative">
@@ -135,8 +179,8 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
                         <div className="space-y-3">
                              <div className="flex items-center justify-between">
                                 <label className="text-[10px] text-gray-500 uppercase font-bold">Description</label>
-                                <button onClick={() => toggleSubVisibility('description')} className="text-[10px] text-primary">
-                                     {section.visibility?.description === false ? 'Hidden' : 'Visible'}
+                                <button onClick={() => toggleSubVisibility('description')} className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors ${section.visibility?.description === false ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}>
+                                     {section.visibility?.description === false ? <><EyeOff size={10} /> Hidden</> : <><Eye size={10} /> Visible</>}
                                 </button>
                             </div>
                             <div className="relative">
@@ -157,8 +201,8 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
                                 <ImageIcon size={14} className="text-primary" />
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Media Settings</span>
                              </div>
-                             <button onClick={() => toggleSubVisibility('media')} className="text-[10px] text-primary">
-                                 {section.visibility?.media === false ? 'Hidden' : 'Visible'}
+                             <button onClick={() => toggleSubVisibility('media')} className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors ${section.visibility?.media === false ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}>
+                                 {section.visibility?.media === false ? <><EyeOff size={10} /> Hidden</> : <><Eye size={10} /> Visible</>}
                              </button>
                         </div>
                         <div className="space-y-3">
@@ -195,14 +239,20 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
                                 </div>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[10px] text-gray-500 uppercase font-bold">Source URL</label>
-                                <input 
-                                    type="text" 
-                                    value={section.media?.url || ''}
-                                    onChange={(e) => onUpdate({ media: { ...section.media, url: e.target.value } })}
-                                    className="w-full bg-[#1a1a1a] border border-[#222222] rounded-lg py-2 px-3 text-xs focus:border-primary outline-none"
-                                    placeholder="https://..."
-                                />
+                                <label className="text-[10px] text-gray-500 uppercase font-bold">Source URL / Upload</label>
+                                <div className="flex gap-2 items-center">
+                                    <input 
+                                        type="text" 
+                                        value={section.media?.url || ''}
+                                        onChange={(e) => onUpdate({ media: { ...section.media, url: e.target.value } })}
+                                        className="flex-1 w-full bg-[#1a1a1a] border border-[#222222] rounded-lg py-2 px-3 text-xs focus:border-primary outline-none"
+                                        placeholder="https://..."
+                                    />
+                                    <label className="cursor-pointer shrink-0 bg-[#222] hover:bg-primary transition-colors text-white text-[10px] uppercase font-bold px-3 py-2 rounded-lg flex items-center gap-2">
+                                        {isUploading ? '...' : <><Upload size={12} /> Upload</>}
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
