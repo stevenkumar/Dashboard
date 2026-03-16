@@ -47,10 +47,10 @@ const SortableSection = ({ section, idx, isExpanded, onToggle, onUpdate, onRemov
 
         try {
             setIsUploading(true);
-            const res = await axios.post('http://127.0.0.1:5000/api/upload', formData, {
+            const res = await axios.post('http://localhost:5000/api/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const fullUrl = `http://127.0.0.1:5000${res.data.url}`;
+            const fullUrl = `http://localhost:5000${res.data.url}`;
             onUpdate({ media: { ...section.media, url: fullUrl } });
         } catch (err) {
             console.error('Error uploading image', err);

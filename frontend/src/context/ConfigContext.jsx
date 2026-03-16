@@ -1,9 +1,10 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { TEMPLATE_PRESETS } from './TemplatePresets';
 
 export const ConfigContext = createContext();
 
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_BASE = 'http://localhost:5000/api';
 
 const defaultGlobal = {
     generalSettings: {
@@ -120,13 +121,67 @@ export const ConfigProvider = ({ children }) => {
         }));
     };
 
+    const applyTemplatePreset = async (id) => {
+        console.log('Initiating applyTemplatePreset for ID:', id);
+        if (!TEMPLATE_PRESETS[id]) {
+            console.error('Invalid Template ID:', id);
+            return false;
+        }
+        
+        try {
+            setLoading(true);
+            const preset = TEMPLATE_PRESETS[id];
+            
+            // 1. Update local state first for immediate UI responsiveness
+            setGlobal(prev => ({ ...prev, globalStyling: preset.globalStyling }));
+            setPages(prev => ({ ...prev, ...preset.pages }));
+            
+            // 2. Prepare data for persistence (clean up MongoDB fields)
+            const cleanData = (obj) => {
+                const newObj = { ...obj };
+                delete newObj._id;
+                delete newObj.__v;
+                delete newObj.createdAt;
+                delete newObj.updatedAt;
+                return newObj;
+            };
+
+            // 3. Persist Global Settings
+            try {
+                const globalData = cleanData({ ...global, globalStyling: preset.globalStyling });
+                await axios.post(`${API_BASE}/global`, globalData);
+                console.log('Global settings persisted successfully');
+            } catch (globalErr) {
+                console.warn('Failed to persist global settings, but continuing...', globalErr);
+            }
+            
+            // 4. Persist Pages
+            try {
+                for (const pageName in preset.pages) {
+                    const pageData = cleanData(preset.pages[pageName]);
+                    await axios.post(`${API_BASE}/pages`, pageData);
+                }
+                console.log('All preset pages persisted successfully');
+            } catch (pageErr) {
+                console.warn('Failed to persist preset pages, but continuing...', pageErr);
+            }
+            
+            return true; // We return true if at least the local state was updated
+        } catch (err) {
+            console.error('Critical error in applyTemplatePreset:', err);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const saveConfig = async () => {
         try {
             setLoading(true);
             // 1. Save Global
             await axios.post(`${API_BASE}/global`, global);
             
-            // 2. Save all pages (for simplicity in this step, we save current state)
+            // 2. Save all pages
             for (const pageName in pages) {
                 await axios.post(`${API_BASE}/pages`, pages[pageName]);
             }
@@ -150,7 +205,8 @@ export const ConfigProvider = ({ children }) => {
             updateGeneralSettings,
             updateGlobalStyling,
             updatePageData,
-            saveConfig
+            saveConfig,
+            applyTemplatePreset
         }}>
             {children}
         </ConfigContext.Provider>
